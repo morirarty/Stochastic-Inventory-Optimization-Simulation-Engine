@@ -153,7 +153,8 @@ Running the engine under a high-velocity procurement scenario produces the follo
 
 The Monte Carlo simulation generates a publication-grade operational analytics chart tracking the warehouse's physical inventory behavior across a full 30-day horizon:
 
-![Inventory Simulation Trend](stochastic_inventory_simulation.png)
+<img width="1181" height="611" alt="image (2)" src="https://github.com/user-attachments/assets/c6af3f43-a889-4970-96fc-c8c3bbb1b87c" />
+
 
 **Chart Component Breakdown:**
 
