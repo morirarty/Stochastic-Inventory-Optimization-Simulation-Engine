@@ -193,21 +193,6 @@ pip install numpy scipy matplotlib pandas
 | `matplotlib` | >= 3.4 | Simulation trajectory visualization |
 | `pandas` | >= 1.3 | Results tabulation & export |
 
-### Installation & Execution
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/[your-username]/stochastic-inventory-optimization.git
-
-# 2. Navigate to project directory
-cd stochastic-inventory-optimization
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run the optimization engine
-python inventory_optimization.py
-```
 
 ### Expected Output
 
