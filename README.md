@@ -75,9 +75,9 @@ $$Q^{*} = \sqrt{\frac{2\lambda \left(K + p \cdot n(R)\right)}{h}}$$
 
 **Partial derivative with respect to R:**
 
-Setting $\frac{\partial E[C(Q,R)]}{\partial R} = 0$ isolates the **critical service-level boundary**, expressed as a complementary CDF condition:
+Setting the partial derivative with respect to R equal to zero isolates the critical service-level boundary:
 
-$$P(X > R^{*}) = \frac{h \cdot Q^{*}}{\lambda \cdot p}$$
+$$P(X > R^* ) = \frac{h \cdot Q^* }{\lambda \cdot p}$$
 
 Where $X \sim \text{Poisson}(\lambda L)$ represents demand during lead time. $R^{*}$ is resolved via the **inverse Poisson CDF**, identifying the minimum integer threshold satisfying the above probability condition.
 
