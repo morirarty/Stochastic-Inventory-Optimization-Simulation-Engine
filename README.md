@@ -31,12 +31,10 @@ Inventory mismanagement is one of the largest hidden cost drivers across global 
 
 | Problem Domain | Operational Consequences | Financial Impact |
 |:---|:---|:---|
-| **Over-Stocking** | Inflated warehouse holding costs, excessive capital lock-in, obsolescence risk | High carrying cost ($h$) per unit |
-| **Under-Stocking** | Missed sales, customer churn, emergency procurement at premium prices | High stockout penalty ($p$) per unit |
+| **Over-Stocking** | Inflated warehouse holding costs, excessive capital lock-in, obsolescence risk | High carrying cost per unit |
+| **Under-Stocking** | Missed sales, customer churn, emergency procurement at premium prices | High stockout penalty per unit |
 
-The core challenge is that **both extremes are simultaneously punished** by the cost function — making manual intuition-based inventory management structurally inadequate for high-volume operations.
-
-> **Objective:** Jointly determine the optimal purchase lot size ($Q^*$) and reorder trigger point ($R^*$) that mathematically guarantee the minimum possible total expected operating cost under volatile, stochastic daily demand conditions.
+> **Objective:** Jointly determine the optimal purchase lot size $Q^{*}$ and reorder trigger point $R^{*}$ that mathematically guarantee the minimum possible total expected operating cost under volatile, stochastic daily demand conditions.
 
 ---
 
@@ -46,7 +44,7 @@ The core challenge is that **both extremes are simultaneously punished** by the 
 
 The optimization target is the **Expected Total Cost per unit time** $E[C(Q,R)]$, composed of three distinct cost components:
 
-$$E[C(Q,R)] = \underbrace{\frac{\lambda}{Q} K}_{\text{Ordering Cost}} + \underbrace{h \left( \frac{Q}{2} + R - \lambda L \right)}_{\text{Holding Cost}} + \underbrace{\frac{\lambda}{Q} p \cdot n(R)}_{\text{Shortage Penalty}}$$
+$$E[C(Q,R)] = \frac{\lambda}{Q} K + h \left( \frac{Q}{2} + R - \lambda L \right) + \frac{\lambda}{Q} p \cdot n(R)$$
 
 **Parameter Definitions:**
 
@@ -65,23 +63,23 @@ $$E[C(Q,R)] = \underbrace{\frac{\lambda}{Q} K}_{\text{Ordering Cost}} + \underbr
 
 ### 2. Joint Optimization via Partial Derivatives
 
-Because $Q^*$ and $R^*$ are **mathematically interdependent** — each optimal value is a function of the other — a simple closed-form solution does not exist. The engine resolves this by applying **first-order optimality conditions** (setting partial derivatives to zero) and iterating to convergence.
+Because $Q^{*}$ and $R^{*}$ are **mathematically interdependent** — each optimal value is a function of the other — a simple closed-form solution does not exist. The engine resolves this by applying **first-order optimality conditions** and iterating to convergence.
 
 **Partial derivative with respect to Q:**
 
-$$\frac{\partial E[C(Q,R)]}{\partial Q} = -\frac{\lambda K}{Q^2} + \frac{h}{2} - \frac{\lambda p \cdot n(R)}{Q^2} = 0$$
+$$\frac{\partial E[C(Q,R)]}{\partial Q} = -\frac{\lambda K}{Q^{2}} + \frac{h}{2} - \frac{\lambda p \cdot n(R)}{Q^{2}} = 0$$
 
 Solving for $Q$ yields the **stochastic-adjusted lot sizing equation:**
 
-$$\boxed{Q^* = \sqrt{\frac{2\lambda \left(K + p \cdot n(R)\right)}{h}}}$$
+$$Q^{*} = \sqrt{\frac{2\lambda \left(K + p \cdot n(R)\right)}{h}}$$
 
 **Partial derivative with respect to R:**
 
 Setting $\frac{\partial E[C(Q,R)]}{\partial R} = 0$ isolates the **critical service-level boundary**, expressed as a complementary CDF condition:
 
-$$\boxed{P(X > R^*) = \frac{h \cdot Q^*}{\lambda \cdot p}}$$
+$$P(X > R^{*}) = \frac{h \cdot Q^{*}}{\lambda \cdot p}$$
 
-Where $X \sim \text{Poisson}(\lambda L)$ represents demand during lead time. $R^*$ is resolved via the **inverse Poisson CDF**, identifying the minimum integer threshold satisfying the above probability condition.
+Where $X \sim \text{Poisson}(\lambda L)$ represents demand during lead time. $R^{*}$ is resolved via the **inverse Poisson CDF**, identifying the minimum integer threshold satisfying the above probability condition.
 
 ---
 
@@ -91,7 +89,7 @@ The expected number of units short per cycle $n(R)$ is computed analytically ove
 
 $$n(R) = \sum_{x=R+1}^{\infty} (x - R) \cdot P(X = x) = E[\max(X - R, 0)]$$
 
-This quantity directly links $Q^*$ and $R^*$, making iterative joint optimization necessary.
+This quantity directly links $Q^{*}$ and $R^{*}$, making iterative joint optimization necessary.
 
 ---
 
@@ -101,11 +99,11 @@ This quantity directly links $Q^*$ and $R^*$, making iterative joint optimizatio
 Initialize: Q₀ ← EOQ (deterministic baseline)
 
 Repeat:
-    Step 1: Compute n(Rₜ) from current Rₜ using Poisson PMF
-    Step 2: Update Q* ← √[2λ(K + p·n(Rₜ)) / h]
+    Step 1: Compute n(R) from current R using Poisson PMF
+    Step 2: Update Q* ← sqrt[ 2λ(K + p·n(R)) / h ]
     Step 3: Compute P(X > R) = h·Q* / (λ·p)
     Step 4: Update R* ← Poisson inverse CDF at (1 - P(X > R))
-    Step 5: Check convergence │Qₜ₊₁ - Qₜ│ < ε
+    Step 5: Check convergence |Q_new - Q_old| < ε
 
 Until convergence criteria satisfied → Output (Q*, R*)
 ```
@@ -144,25 +142,24 @@ Running the engine under a high-velocity procurement scenario produces the follo
 | Decision | Action |
 |:---------|:-------|
 | When stock drops to **106 units** | Immediately place a replenishment order |
-| Order size every cycle | **277.65 units** (≈ 278 units in practice) |
+| Order size every cycle | **277.65 units** (278 units in practice) |
 | Safety buffer maintained | **16 units** above mean lead-time demand |
 
 ---
 
 ### 30-Day Simulation Visualization
 
-The Monte Carlo simulation generates a publication-grade operational analytics chart tracking the warehouse's physical inventory behavior across a full 30-day horizon:
+The Monte Carlo simulation generates a publication-grade operational analytics chart tracking warehouse inventory behavior across a full 30-day horizon:
 
-<img width="1181" height="611" alt="image (2)" src="https://github.com/user-attachments/assets/c6af3f43-a889-4970-96fc-c8c3bbb1b87c" />
-
+![Inventory Simulation Trend](stochastic_inventory_simulation.png)
 
 **Chart Component Breakdown:**
 
 | Visual Element | Color | Interpretation |
 |:--------------|:-----:|:--------------|
-| Dynamic Stock Level Curve | 🟢 Green | Daily ending inventory position. Non-linear degradation rate reflects true stochastic demand variance — no two days are identical |
-| Automated Reorder Trigger | 🔴 Red Line | The $R^* = 106$ unit threshold. The moment stock touches this line, an order for $Q^* = 278$ units is automatically dispatched |
-| Safety Stock Buffer | 🟠 Orange Line | The 16-unit protective floor absorbing unexpected demand spikes during the 6-day supplier lead time window |
+| Dynamic Stock Level Curve | 🟢 Green | Daily ending inventory position. Non-linear degradation rate reflects true stochastic demand variance |
+| Automated Reorder Trigger | 🔴 Red Line | The $R^{*} = 106$ unit threshold. When stock touches this line, an order for $Q^{*} = 278$ units is dispatched |
+| Safety Stock Buffer | 🟠 Orange Line | The 16-unit protective floor absorbing unexpected demand spikes during the 6-day lead time window |
 | Replenishment Events | ↑ Arrows | Instantaneous stock jumps representing order arrivals after lead time delay |
 
 ---
@@ -172,10 +169,10 @@ The Monte Carlo simulation generates a publication-grade operational analytics c
 ```
 stochastic-inventory-optimization/
 │
-├── inventory_optimization.py       # Core optimization & simulation engine
+├── inventory_optimization.py            # Core optimization & simulation engine
 ├── stochastic_inventory_simulation.png  # Output visualization
-├── requirements.txt                # Dependency list
-└── README.md                       # Project documentation
+├── requirements.txt                     # Dependency list
+└── README.md                            # Project documentation
 ```
 
 ---
@@ -190,10 +187,10 @@ pip install numpy scipy matplotlib pandas
 
 | Library | Version | Role |
 |:--------|:-------:|:-----|
-| `numpy` | ≥1.21 | Array operations & random Poisson sampling |
-| `scipy` | ≥1.7 | Poisson CDF/PPF for $R^*$ computation |
-| `matplotlib` | ≥3.4 | Simulation trajectory visualization |
-| `pandas` | ≥1.3 | Results tabulation & export |
+| `numpy` | >= 1.21 | Array operations & random Poisson sampling |
+| `scipy` | >= 1.7 | Poisson CDF/PPF for R* computation |
+| `matplotlib` | >= 3.4 | Simulation trajectory visualization |
+| `pandas` | >= 1.3 | Results tabulation & export |
 
 ### Installation & Execution
 
@@ -228,16 +225,16 @@ python inventory_optimization.py
 ## 💡 Strategic Business Value
 
 ### 1. Automated Procurement Workflows
-Eliminates manual, intuition-driven warehouse auditing by replacing it with mathematically rigorous replenishment triggers. Human judgment is replaced by a deterministic rule: **when stock = $R^*$, order $Q^*$ units** — removing latency and error from the procurement cycle.
+Eliminates manual, intuition-driven warehouse auditing by replacing it with mathematically rigorous replenishment triggers. The rule is simple and deterministic: **when stock reaches $R^{*}$, order $Q^{*}$ units** — removing latency and human error from the procurement cycle entirely.
 
 ### 2. Quantifiable Risk & Service Level Control
-Executive management can directly manipulate the **stockout penalty parameter ($p$)** to consciously set organizational risk tolerance. Increasing $p$ raises $R^*$, improving service level at the cost of higher holding expenses — providing a transparent, data-grounded lever for strategic trade-off decisions.
+Executive management can directly manipulate the **stockout penalty parameter** $p$ to consciously set organizational risk tolerance. Increasing $p$ raises $R^{*}$, improving service level at the cost of higher holding expenses — providing a transparent, data-grounded lever for strategic trade-off decisions.
 
 ### 3. Capital Efficiency Through Safety Stock Precision
 Traditional over-conservative safety stock policies often lock 30–50% excess capital in idle inventory. This engine's 16-unit safety stock is not a guess — it is the **minimum statistically sufficient buffer** for the specified service level, freeing excess working capital for higher-return operational investments.
 
 ### 4. Scalability Across SKU Portfolios
-The optimization engine is parameterized by design. By feeding different $(\lambda, L, K, h, p)$ values per SKU, the same codebase can simultaneously optimize replenishment policies across an entire product catalog — making it directly applicable to enterprise-scale inventory management systems.
+The optimization engine is fully parameterized by design. By supplying different $(\lambda, L, K, h, p)$ values per SKU, the same codebase simultaneously optimizes replenishment policies across an entire product catalog — making it directly applicable to enterprise-scale inventory management systems.
 
 ---
 
@@ -245,9 +242,9 @@ The optimization engine is parameterized by design. By feeding different $(\lamb
 
 | Assumption | Limitation | Future Enhancement |
 |:-----------|:-----------|:-------------------|
-| Poisson demand distribution | May not fit all product categories | Fit distribution empirically per SKU (AIC/BIC selection) |
+| Poisson demand distribution | May not fit all product categories | Fit distribution empirically per SKU via AIC/BIC selection |
 | Single product, single depot | Cannot model multi-SKU interactions | Multi-item joint replenishment extension |
-| Instantaneous order receipt after $L$ | Ignores lead time variability | Stochastic lead time $L \sim \text{Normal}(\mu_L, \sigma_L)$ |
+| Fixed lead time $L$ | Ignores lead time variability | Stochastic lead time modeled as $L \sim \text{Normal}(\mu_L, \sigma_L)$ |
 | Constant cost parameters | Real costs fluctuate seasonally | Dynamic cost parameterization via time-series inputs |
 | No capacity constraints | Unlimited warehouse space assumed | Capacitated inventory model integration |
 
@@ -262,3 +259,4 @@ The optimization engine is parameterized by design. By feeding different $(\lamb
 
 ---
 
+*Portfolio Project · Operations Research & Supply Chain Analytics · Nicolas Stenly Sirait · 2026*
